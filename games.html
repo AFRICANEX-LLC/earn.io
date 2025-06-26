@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>🎰 Classic Slot Machine - Zeemoney Casino</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="icon" href="slot-icon.png" />
+  <style>
+    body {
+      background: #121212;
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    h2 {
+      color: #ffd700;
+      text-shadow: 0 0 8px #ffd700aa;
+    }
+
+    #coinBalance {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #00ff00;
+      text-shadow: 0 0 5px #00ff00aa;
+      margin: 1rem 0;
+    }
+
+    #slotMachine {
+      background: linear-gradient(145deg, #222, #1a1a1a);
+      border-radius: 20px;
+      padding: 20px 30px;
+      width: 360px;
+      box-shadow: 0 0 20px #ffd700aa;
+    }
+
+    .reels {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .reel {
+      width: 80px;
+      height: 100px;
+      background: #000;
+      border-radius: 12px;
+      box-shadow: inset 0 0 12px #444, 0 0 10px #ffd700cc;
+      overflow: hidden;
+      border: 3px solid #ffd700;
+    }
+
+    .reel-strip {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 3.5rem;
+      font-weight: 700;
+      color: #fff;
+      transition: transform 0.3s ease-out;
+    }
+
+    .symbol {
+      height: 100px;
+      line-height: 100px;
+      text-align: center;
+      text-shadow: 0 0 4px #ffd700cc;
+      border-bottom: 1px solid #333;
+      width: 100%;
+    }
+
+    #controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    label, small {
+      color: #ffd700;
+    }
+
+    input[type=number] {
+      width: 120px;
+      padding: 6px;
+      font-size: 1.1rem;
+      border: 2px solid #ffd700;
+      border-radius: 8px;
+      background: #111;
+      color: #ffd700;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    button {
+      cursor: pointer;
+      padding: 10px 20px;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 12px;
+      border: none;
+      background: #ffd700;
+      color: #000;
+      box-shadow: 0 0 10px #ffd700aa;
+      transition: background 0.2s ease;
+      width: 90%;
+    }
+
+    button:hover:not(:disabled) {
+      background: #ffec5c;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #resultMessage {
+      margin-top: 10px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #ffd700;
+      text-align: center;
+      min-height: 2rem;
+    }
+
+    #historyTable {
+      margin-top: 20px;
+      width: 100%;
+      max-width: 360px;
+    }
+
+    #historyTable table {
+      width: 100%;
+      color: #ffd700;
+      font-size: 0.9rem;
+      border-collapse: collapse;
+    }
+
+    #historyTable th, #historyTable td {
+      padding: 6px;
+      border-bottom: 1px solid #444;
+      text-align: center;
+    }
+
+    @media (max-width: 420px) {
+      #slotMachine {
+        width: 95vw;
+        padding: 10px;
+      }
+
+      .reel {
+        width: 60px;
+        height: 80px;
+      }
+
+      .symbol {
+        height: 80px;
+        line-height: 80px;
+        font-size: 2.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<h2>🎰 Classic Slot Machine</h2>
+<div id="coinBalance">Coins: UGX 0</div>
+
+<div id="slotMachine">
+  <div class="reels"></div>
+
+  <div id="controls">
+    <label for="betInput">Place your bet (UGX):</label>
+    <input id="betInput" type="number" min="100" step="100" value="500" />
+    <small>Minimum bet is UGX 100</small>
+
+    <button id="spinBtn">🎲 Spin</button>
+    <button id="depositBtn">💳 Deposit UGX 10,000</button>
+    <button id="withdrawBtn">🏧 Withdraw UGX 5,000</button>
+  </div>
+
+  <div id="resultMessage"></div>
+</div>
+
+<div id="historyTable">
+  <h4 style="text-align:center;">🧾 Transaction History</h4>
+  <table>
+    <thead>
+      <tr><th>Action</th><th>Details</th><th>Amount</th></tr>
+    </thead>
+    <tbody id="historyBody"></tbody>
+  </table>
+</div>
+
+<!-- Sounds -->
+<audio id="spinSound" src="https://www.myinstants.com/media/sounds/slot-machine-spin.mp3" preload="auto"></audio>
+<audio id="winSound" src="https://www.myinstants.com/media/sounds/cash-register.mp3" preload="auto"></audio>
+<audio id="loseSound" src="https://www.myinstants.com/media/sounds/incorrect.mp3" preload="auto"></audio>
+
+<script>
+(() => {
+  const symbols = ['🍒', '🍋', '🍉', '🍇', '🔔', '⭐', '7️⃣'];
+  const payoutMultipliers = {
+    '🍒': 5, '🍋': 4, '🍉': 6,
+    '🍇': 7, '🔔': 8, '⭐': 10, '7️⃣': 20
+  };
+
+  const reelsCount = 3;
+  let coinBalance = parseInt(localStorage.getItem('slotCoins')) || 10000;
+  const coinBalanceDisplay = document.getElementById('coinBalance');
+  const reelsContainer = document.querySelector('.reels');
+  const betInput = document.getElementById('betInput');
+  const spinBtn = document.getElementById('spinBtn');
+  const depositBtn = document.getElementById('depositBtn');
+  const withdrawBtn = document.getElementById('withdrawBtn');
+  const resultMessage = document.getElementById('resultMessage');
+  const historyBody = document.getElementById('historyBody');
+
+  const spinSound = document.getElementById('spinSound');
+  const winSound = document.getElementById('winSound');
+  const loseSound = document.getElementById('loseSound');
+
+  const reels = [];
+
+  function updateCoinBalance() {
+    coinBalanceDisplay.textContent = `Coins: UGX ${coinBalance.toLocaleString()}`;
+    localStorage.setItem('slotCoins', coinBalance);
+  }
+
+  function addHistory(action, details, amount) {
+    const row = document.createElement('tr');
+    row.innerHTML = `<td>${action}</td><td>${details}</td><td>${amount}</td>`;
+    historyBody.prepend(row);
+  }
+
+  function createReel() {
+    const reel = document.createElement('div');
+    reel.classList.add('reel');
+    const reelStrip = document.createElement('div');
+    reelStrip.classList.add('reel-strip');
+    for (let i = 0; i < 2; i++) {
+      symbols.forEach(sym => {
+        const symDiv = document.createElement('div');
+        symDiv.classList.add('symbol');
+        symDiv.textContent = sym;
+        reelStrip.appendChild(symDiv);
+      });
+    }
+    reel.appendChild(reelStrip);
+    return { reel, reelStrip };
+  }
+
+  for (let i = 0; i < reelsCount; i++) {
+    const { reel, reelStrip } = createReel();
+    reelsContainer.appendChild(reel);
+    reels.push(reelStrip);
+  }
+
+  function setControlsEnabled(enabled) {
+    spinBtn.disabled = !enabled;
+    betInput.disabled = !enabled;
+  }
+
+  function showResultMessage(msg, isWin) {
+    resultMessage.textContent = msg;
+    resultMessage.style.color = isWin ? '#00ff00' : '#ff4040';
+    resultMessage.style.textShadow = isWin ? '0 0 10px #00ff00aa' : '0 0 10px #ff4040aa';
+  }
+
+  function spinReels(bet) {
+    spinSound.currentTime = 0;
+    spinSound.play();
+    setControlsEnabled(false);
+    resultMessage.textContent = '';
+    const stopIndexes = [];
+    for (let i = 0; i < reelsCount; i++) {
+      stopIndexes.push(Math.floor(Math.random() * symbols.length));
+    }
+
+    let animationsDone = 0;
+
+    reels.forEach((reelStrip, idx) => {
+      const totalHeight = 100 * symbols.length;
+      const cycles = 3 + idx;
+      const index = stopIndexes[idx];
+      const finalOffset = -(cycles * totalHeight + index * 100);
+      reelStrip.style.transition = 'transform 3s cubic-bezier(0.33, 1, 0.68, 1)';
+      reelStrip.style.transform = `translateY(${finalOffset}px)`;
+
+      reelStrip.addEventListener('transitionend', function handler() {
+        const resetOffset = -(index * 100);
+        reelStrip.style.transition = 'none';
+        reelStrip.style.transform = `translateY(${resetOffset}px)`;
+        animationsDone++;
+        if (animationsDone === reelsCount) finalizeSpin(stopIndexes, bet);
+      }, { once: true });
+    });
+  }
+
+  function finalizeSpin(finalIndexes, bet) {
+    const finalSymbols = finalIndexes.map(i => symbols[i]);
+    const counts = {};
+    finalSymbols.forEach(s => counts[s] = (counts[s] || 0) + 1);
+
+    let winnings = 0;
+    let message = '';
+    const [s1] = finalSymbols;
+
+    if (Object.values(counts).includes(3)) {
+      winnings = bet * payoutMultipliers[s1];
+      message = `🎉 Jackpot! Three ${s1}! Win UGX ${winnings.toLocaleString()}`;
+      winSound.play();
+    } else if (Object.values(counts).includes(2)) {
+      const sym = Object.keys(counts).find(k => counts[k] === 2);
+      winnings = Math.floor(bet * (payoutMultipliers[sym] / 2));
+      message = `👍 Two ${sym}! Win UGX ${winnings.toLocaleString()}`;
+      winSound.play();
+    } else {
+      message = `😞 No match. Lose UGX ${bet.toLocaleString()}`;
+      loseSound.play();
+    }
+
+    coinBalance += winnings;
+    updateCoinBalance();
+    addHistory("🎰 Spin", finalSymbols.join(' '), winnings > 0 ? `+UGX ${winnings.toLocaleString()}` : `-UGX ${bet.toLocaleString()}`);
+    showResultMessage(message, winnings > 0);
+    setControlsEnabled(true);
+  }
+
+  spinBtn.addEventListener('click', () => {
+    const bet = parseInt(betInput.value);
+    if (isNaN(bet) || bet < 100) return alert("Minimum bet is UGX 100");
+    if (bet > coinBalance) return alert("Not enough coins!");
+    coinBalance -= bet;
+    updateCoinBalance();
+    spinReels(bet);
+  });
+
+  depositBtn.addEventListener('click', () => {
+    const form = document.createElement('form');
+    form.method = 'post';
+    form.action = 'https://my.jpesa.com/?dad=xp';
+
+    const fields = {
+      ownerid: 'godfrey.nsereko',
+      description: 'Credit Note',
+      return: 'https://yourdomain.com/games.html?recharge=10000',
+      cancel: 'https://my.jpesa.com',
+      cur: 'UGX',
+      amount: '10000'
+    };
+
+    for (const [key, value] of Object.entries(fields)) {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = value;
+      form.appendChild(input);
+    }
+
+    document.body.appendChild(form);
+    form.submit();
+  });
+
+  withdrawBtn.addEventListener('click', () => {
+    if (coinBalance < 5000) return alert("You need at least UGX 5,000 to withdraw.");
+    coinBalance -= 5000;
+    updateCoinBalance();
+    addHistory("🏧 Withdraw", "UGX 5,000 withdrawn", "-UGX 5,000");
+    showResultMessage("🏧 Withdrawal successful: UGX 5,000 deducted.", false);
+  });
+
+  // Detect ?recharge=10000 and top up coins
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('recharge')) {
+    const amount = parseInt(params.get('recharge')) || 0;
+    if (amount > 0) {
+      coinBalance += amount;
+      updateCoinBalance();
+      addHistory("💳 JPesa Payment", "Recharge Success", `+UGX ${amount.toLocaleString()}`);
+      showResultMessage(`💳 Payment successful: UGX ${amount.toLocaleString()} added!`, true);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }
+
+  updateCoinBalance();
+})();
+</script>
+</body>
+</html>
